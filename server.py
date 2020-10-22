@@ -45,10 +45,12 @@ def get_state():
 @cross_origin()
 def set_workout():
     if ergman is not None:
-        if 'distance' in request.form:
-            ergman.set_workout(distance=int(request.form['distance']))
-        elif 'program' in request.form:
-            ergman.set_workout(program=int(request.form['program']))
+        distance = request.args.get('distance', default=None, type=int)
+        program = request.args.get('program', default=None, type=int)
+        if distance is not None:
+            ergman.set_workout(distance=distance)
+        elif program is not None:
+            ergman.set_workout(program=program)
         else:
             print(request.form)
             return ('Invalid command', 200)
