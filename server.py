@@ -44,8 +44,13 @@ def get_state():
 @api.route('/workout', methods=['POST'])
 @cross_origin()
 def set_workout():
-    if ergman is not None: ergman.set_workout(**request.form)
-    return ('',204)
+    if ergman is not None:
+        if 'distance' in request.form:
+            ergman.set_workout(distance=int(request.form['distance']))
+        elif 'program' in request.form:
+            ergman.set_workout(program=int(request.form['program']))
+        return ('Invalid command', 200)
+    return ('OK',200)
 
 if __name__ == '__main__':
     ergman = ErgManager(pyrow, add_callback=add_cb, update_callback=change_cb)
