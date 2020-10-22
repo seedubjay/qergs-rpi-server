@@ -45,6 +45,7 @@ def get_state():
 @cross_origin()
 def set_workout():
     if ergman is not None: ergman.set_workout(**request.form)
+    return ('',204)
 
 if __name__ == '__main__':
     ergman = ErgManager(pyrow, add_callback=add_cb, update_callback=change_cb)
