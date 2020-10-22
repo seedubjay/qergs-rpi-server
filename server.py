@@ -49,7 +49,9 @@ def set_workout():
             ergman.set_workout(distance=int(request.form['distance']))
         elif 'program' in request.form:
             ergman.set_workout(program=int(request.form['program']))
-        return ('Invalid command', 200)
+        else:
+            print(request.form)
+            return ('Invalid command', 200)
     return ('OK',200)
 
 if __name__ == '__main__':
