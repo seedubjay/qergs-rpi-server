@@ -1,4 +1,4 @@
-from pyrow import simpyrow as pyrow
+from pyrow import pyrow
 from pyrow.ergmanager import ErgManager
 
 from flask import Flask, json, request
