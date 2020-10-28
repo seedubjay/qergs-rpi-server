@@ -1,12 +1,14 @@
 from pyrow import pyrow
 from pyrow.ergmanager import ErgManager
 
-from flask import Flask, json, request
-from flask_cors import CORS, cross_origin
-
 from datetime import datetime, time, timedelta, date
 import random
 import sys
+import json
+
+import socket
+import websockets
+import asyncio
 
 data = {}
 ergman = None
@@ -14,48 +16,41 @@ ergman = None
 port = 5353
 if len(sys.argv) > 1: port = int(sys.argv[1])
 
-def add_cb(erg):
-    pass
+hostname = sys
 
-def change_cb(erg):
-    global data
-    description = erg._pyerg.get_erg()
-    data = {
-        "id": description["serial"],
-        "status": description["status"],
-        "time": erg.data["time"],
-        "distance": erg.data["distance"],
-        "interval_count": erg.data["intcount"],
-        "workout_state": erg.data["state"],
-        "pace": erg.data["pace"],
-        "rate": erg.data["spm"]
+async def get_erg_update(erg):
+    desc = erg.get_erg()
+    monitor = erg.get_monitor()
+    workout = erg.get_workout()
+    return {
+        "serial": desc["serial"],
+        "status": desc["status"],
+        "time": monitor["time"],
+        "distance": monitor["distance"],
+        "interval_count": workout["intcount"],
+        "workout_state": workout["state"],
+        "pace": monitor["pace"],
+        "rate": monitor["spm"]
     }
 
-api = Flask(__name__)
-cors = CORS(api)
-api.config['CORS_HEADERS'] = 'Content-Type'
+async def main():
+    while True:
+        try:
+            async with websockets.connect('ws://localhost:5000/erg/' + socket.gethostname()) as ws:
+                erg = None
+                while erg is None:
+                    ergs = [pyrow.PyErg(e) for e in pyrow.find()]
+                    erg = ergs[0] if len(ergs) > 0 else None
+                    await asyncio.sleep(1)
+                
+                while True:
+                    data = await asyncio.gather(*map(get_erg_update, ergs))
+                    print(data)
+                    await ws.send(json.dumps(data))
+                    await asyncio.sleep(1)
+        except:
+            pass
+        await asyncio.sleep(5)
 
-@api.route('/', methods=['GET'])
-@cross_origin()
-def get_state():
-    global data
-    return json.dumps(data)
 
-@api.route('/workout', methods=['POST'])
-@cross_origin()
-def set_workout():
-    if ergman is not None:
-        distance = request.args.get('distance', default=None, type=int)
-        program = request.args.get('program', default=None, type=int)
-        if distance is not None:
-            ergman.set_workout(distance=distance)
-        elif program is not None:
-            ergman.set_workout(program=program)
-        else:
-            print(request.form)
-            return ('Invalid command', 200)
-    return ('OK',200)
-
-if __name__ == '__main__':
-    ergman = ErgManager(pyrow, add_callback=add_cb, update_callback=change_cb)
-    api.run(host='0.0.0.0', port=port)
+asyncio.run(main())

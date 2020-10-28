@@ -9,6 +9,8 @@ import time
 
 import numpy as np
 
+import random
+
 from pyrow.pyrow import get_pretty
 
 STATUS = 9
@@ -26,6 +28,8 @@ class PyErg(object):
         self._start_time = datetime.datetime.now()
         self._factor = np.random.normal(1, 0.1)
         self.__lastsend = datetime.datetime.now()
+
+        self.__serial = random.randint(0,1000000)
 
     @classmethod
     def __checkvalue(self, value, label, minimum, maximum):
@@ -59,7 +63,7 @@ class PyErg(object):
         POWER = 150
         CAL_TO_TIME = 1
 
-        DIST = lambda x: 4*x #+ 40.3 - 60*np.exp(-x/120) + 20*np.exp(-x/4) + 80*np.sin(np.pi*x/480) - 0.3*np.cos(np.pi*x)
+        DIST = lambda x: 6*x + 40.3 - 60*np.exp(-x/120) + 20*np.exp(-x/4) + 80*np.sin(np.pi*x/480) - 0.3*np.cos(np.pi*x)
 
         elapsed_time = (datetime.datetime.now() - self._start_time).total_seconds()
         monitor = {}
@@ -123,7 +127,7 @@ class PyErg(object):
         ergdata['hwversion'] = 0
         ergdata['swversion'] = 0
         #Get data from csafe get serial command
-        ergdata['serial'] = 0
+        ergdata['serial'] = self.__serial
         #Get data from csafe get capabilities command
         ergdata['maxrx'] = 0
         ergdata['maxtx'] = 0
